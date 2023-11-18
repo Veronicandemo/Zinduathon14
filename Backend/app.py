@@ -230,10 +230,35 @@ def products():
 
         return response
     
-@app.route('/products/<int:id>', methods=['DELETE', 'PATCH'])
+@app.route('/products/<int:id>', methods=['GET', 'DELETE', 'PATCH'])
 def product_by_id(id):
     product = Product.query.filter_by(id=id).first()
+    
     if product:
+        farmer = Farmer.query.filter(Farmer.id == product.farmer_id).first()
+        # product.farmer_name = farmer.username
+        # if request.method == 'GET':
+        #     return jsonify(product.serialize(), farmer_name=farmer.username)
+
+        product_dict = {
+                'id': product.id,
+                'image_url': product.image_url,
+                'location': product.location,
+                'quantity': product.quantity,
+                'farmer_id': product.farmer_id,
+                'farmer_name': farmer.username
+            }
+        response_body = product_dict
+        response = make_response(jsonify(response_body), 200)
+        return response
+
+        
+        if request.method == "DELETE":
+            db.session.delete(product)
+            db.session.commit()
+            response_body = {"message": "Product deleted!"}
+            response = make_response(response_body, 200)
+            return response
         if request.method == "DELETE":
             db.session.delete(product)
             db.session.commit()
