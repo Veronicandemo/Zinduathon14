@@ -31,7 +31,21 @@ def get_users():
 
     return response
 
+@app.route("/farmers")
+def get_farmers():
+    farmers_list = []
+    farmers = Farmer.query.all()
+    for farmer in farmers:
+        farmer_dict = {
+            "username": farmer.username,
+            "email": farmer.email
+        }
+        farmers_list.append(farmer_dict)
 
+    response_body = farmers_list
+    response = make_response(jsonify(response_body), 200)
+
+    return response
 
 @app.route('/register', methods=['POST'])
 def register():
