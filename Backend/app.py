@@ -7,6 +7,12 @@ import os ;
 import base64;
 from datetime import datetime, timedelta;
 
+import cloudinary
+import cloudinary.uploader
+
+from utils import cloudconfig
+cloudconfig
+
 secret_key = base64.b64encode(os.urandom(24)).decode('utf-8')
 
 @app.route('/register', methods=['POST'])
@@ -140,10 +146,19 @@ def products():
                 response = make_response(response_body)
                 return response
 
-            image_url = data.get('image_url')
+            image_file = request.files['image_file']
             location = data.get('location')
             quantity = data.get('quantity')
             farmer_id = farmer.id
+
+            if image_file:
+                try:
+                    result = cloudinary.uploader.upload(image_file)  # Upload the image to Cloudinary
+                    image_url = result['secure_url']  # Get the secure URL of the uploaded image
+
+                except Exception as e:
+                    response_body = {"error": "Image upload failed"}
+                    response = make_response(response_body, 500)
 
             new_product = Product(image_url=image_url, location=location, quantity=quantity, farmer_id=farmer_id)
             db.session.add(new_product)
