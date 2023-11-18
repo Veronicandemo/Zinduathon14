@@ -1,7 +1,7 @@
 from config import app, db
 import bcrypt
 from flask import Flask, jsonify, make_response, request, session
-from models import User, Farmer, Product
+from models import User, Farmer, Product, Course
 import jwt;
 import os ;
 import base64;
@@ -66,6 +66,9 @@ def register():
                     response_body = {"error": "Image upload failed"}
                     response = make_response(response_body, 500)
                     return response
+            else:
+                # If no image is provided, set image_url to None or any default value you prefer
+                image_url = None
 
             hashpass = bcrypt.hashpw(data.get('password').encode('utf-8'), bcrypt.gensalt())
             new_user = User(
@@ -77,6 +80,8 @@ def register():
             db.session.add(new_user)
             db.session.commit()
             return jsonify({'message': 'User created successfully'}), 201
+        
+        
 
         return jsonify({'error': 'Username/Password already exists!'}), 403
 
@@ -120,6 +125,10 @@ def register_farmer():
                     response_body = {"error": "Image upload failed"}
                     response = make_response(response_body, 500)
                     return response
+                
+            else:
+                # If no image is provided, set image_url to None or any default value you prefer
+                image_url = None
 
 
             hashpass = bcrypt.hashpw(data.get('password').encode('utf-8'), bcrypt.gensalt())
@@ -221,6 +230,10 @@ def products():
                     response_body = {"error": "Image upload failed"}
                     response = make_response(response_body, 500)
 
+            else:
+                # If no image is provided, set image_url to None or any default value you prefer
+                image_url = None
+
             new_product = Product(image_url=image_url, location=location, quantity=quantity, farmer_id=farmer_id)
             db.session.add(new_product)
             db.session.commit()
@@ -271,6 +284,71 @@ def product_by_id(id):
     else:
         response_body = {"error": "Product not found"}
         response = make_response(jsonify(response_body), 404)
+        return response
+    
+@app.route('/courses', methods=['GET', 'POST'])
+def courses():
+    if request.method == 'GET':
+        course_list = []
+        courses = Course.query.all()
+        for course in courses:
+            
+            product_dict = {
+                'id': course.id,
+                'image_url': course.image_url,
+                'video_url': course.video_url,
+                'title':course.title,
+                'description': course.description,
+                'content': course.content
+            }
+            course_list.append(product_dict)
+        response_body = course_list
+        response = make_response(jsonify(response_body), 200)
+        return response
+    
+    elif request.method == 'POST':
+        data = request.form
+        if data:
+
+            image_file = request.files['image_file']
+            video_file = request.files['video_file']
+            title = data.get('title')
+            description = data.get('description')
+            content = data.get('content')
+
+            if image_file:
+                try:
+                    result = cloudinary.uploader.upload(image_file)  # Upload the image to Cloudinary
+                    image_url = result['secure_url']  # Get the secure URL of the uploaded image
+
+                except Exception as e:
+                    response_body = {"error": "Image upload failed"}
+                    response = make_response(response_body, 500)
+
+            else:
+                # If no image is provided, set image_url to None or any default value you prefer
+                image_url = None
+
+            if video_file:
+                try:
+                    result = cloudinary.uploader.upload(video_file, resource_type='video')  # Upload the image to Cloudinary
+                    video_url = result['secure_url']  # Get the secure URL of the uploaded image
+                
+
+                except Exception as e:
+                    response_body = {"error": "Video upload failed"}
+                    response = make_response(response_body, 500)
+
+            new_course = Course(image_url=image_url, video_url=video_url, title=title, description=description, content=content)
+            db.session.add(new_course)
+            db.session.commit()
+            response_body = {"message": "Course created successfully!"}
+            response = make_response(response_body, 201)
+
+        else:
+            response_body = {"error": "Input data!"}
+            response = make_response(response_body)
+
         return response
     
 if __name__ == '__main__':

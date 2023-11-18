@@ -77,3 +77,12 @@ class Product(db.Model, SerializerMixin):
             'quantity': self.quantity,
             'farmer_id': self.farmer_id
         }
+    
+class Course(db.Model, SerializerMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    image_url = db.Column(db.String)
+    video_url = db.Column(db.String)
+    title = db.Column(db.Integer)
+    description = db.Column(db.Integer)
+    content = db.Column(db.Integer)
+    
