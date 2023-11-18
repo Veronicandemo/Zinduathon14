@@ -10,6 +10,7 @@ class User(db.Model, SerializerMixin):
     username = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String, nullable=False)
     password = db.Column(db.String, nullable = False)
+    profile_img = db.Column(db.String)
     created_at = db.Column(db.TIMESTAMP, default=datetime.utcnow)
 
     @validates('username')
@@ -35,6 +36,7 @@ class Farmer(db.Model, SerializerMixin):
     username = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String, nullable=False)
     password = db.Column(db.String, nullable = False)
+    profile_img = db.Column(db.String)
     created_at = db.Column(db.TIMESTAMP, default=datetime.utcnow)
 
     # Define one-to-many relationship with products

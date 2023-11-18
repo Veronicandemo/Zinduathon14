@@ -17,17 +17,29 @@ secret_key = base64.b64encode(os.urandom(24)).decode('utf-8')
 
 @app.route('/register', methods=['POST'])
 def register():
-    data = request.get_json()
+    data = request.form
     if request.method == 'POST':
         existing_username = User.query.filter(User.username == data.get('username')).first()
         existing_email = User.query.filter(User.username == data.get('email')).first()
 
         if existing_username is None and existing_email is None:
+
+            image_file = request.files['profile_img']
+            if image_file:
+                try:
+                    result = cloudinary.uploader.upload(image_file)  # Upload the image to Cloudinary
+                    image_url = result['secure_url']  # Get the secure URL of the uploaded image
+
+                except Exception as e:
+                    response_body = {"error": "Image upload failed"}
+                    response = make_response(response_body, 500)
+
             hashpass = bcrypt.hashpw(data.get('password').encode('utf-8'), bcrypt.gensalt())
             new_user = User(
                 username=data.get('username'),
                 email=data.get('email'),
-                password=hashpass
+                password=hashpass,
+                profile_img = image_url
             )
             db.session.add(new_user)
             db.session.commit()
@@ -37,7 +49,7 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
+    data = request.form
 
     email = data.get('email')
     password = data.get('password')
@@ -51,24 +63,36 @@ def login():
         if bcrypt.checkpw(password.encode('utf-8'), user.password):
             expiration_time = datetime.utcnow() + timedelta(hours=400)
             token = jwt.encode({'user_id': user.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
+            profile_img = user.profile_img
 
-            return jsonify({'message': 'Logged in successfully!', 'token': token}), 200
+            return jsonify({'message': 'Logged in successfully!', 'token': token, 'profile_img': profile_img}), 200
         
     return jsonify({'error': 'Invalid username/password!'}), 401
 
 @app.route('/farmer/register', methods=['POST'])
 def register_farmer():
-    data = request.get_json()
+    data = request.form
     if request.method == 'POST':
         existing_username = Farmer.query.filter(Farmer.username == data.get('username')).first()
         existing_email = Farmer.query.filter(Farmer.username == data.get('email')).first()
 
         if existing_username is None and existing_email is None:
+            image_file = request.files['profile_img']
+            if image_file:
+                try:
+                    result = cloudinary.uploader.upload(image_file)  # Upload the image to Cloudinary
+                    image_url = result['secure_url']  # Get the secure URL of the uploaded image
+
+                except Exception as e:
+                    response_body = {"error": "Image upload failed"}
+                    response = make_response(response_body, 500)
+
             hashpass = bcrypt.hashpw(data.get('password').encode('utf-8'), bcrypt.gensalt())
             new_farmer = Farmer(
                 username=data.get('username'),
                 email=data.get('email'),
-                password=hashpass
+                password=hashpass,
+                profile_img = image_url
             )
             db.session.add(new_farmer)
             db.session.commit()
@@ -78,7 +102,7 @@ def register_farmer():
 
 @app.route('/farmer/login', methods=['POST'])
 def login_farmer():
-    data = request.get_json()
+    data = request.form
 
     email = data.get('email')
     password = data.get('password')
@@ -92,9 +116,11 @@ def login_farmer():
         if bcrypt.checkpw(password.encode('utf-8'), farmer.password):
             expiration_time = datetime.utcnow() + timedelta(hours=400)
             token = jwt.encode({'user_id': farmer.id, 'exp': expiration_time}, secret_key, algorithm='HS256')
+            profile_img = farmer.profile_img
+
             session['farmer_id'] = farmer.id
 
-            return jsonify({'message': 'Logged in successfully!', 'token': token}), 200
+            return jsonify({'message': 'Logged in successfully!', 'token': token, 'profile_img': profile_img}), 200
         
     return jsonify({'error': 'Invalid username/password!'}), 401
     
