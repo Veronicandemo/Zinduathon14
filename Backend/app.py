@@ -65,6 +65,7 @@ def register():
                 except Exception as e:
                     response_body = {"error": "Image upload failed"}
                     response = make_response(response_body, 500)
+                    return response
 
             hashpass = bcrypt.hashpw(data.get('password').encode('utf-8'), bcrypt.gensalt())
             new_user = User(
@@ -118,6 +119,8 @@ def register_farmer():
                 except Exception as e:
                     response_body = {"error": "Image upload failed"}
                     response = make_response(response_body, 500)
+                    return response
+
 
             hashpass = bcrypt.hashpw(data.get('password').encode('utf-8'), bcrypt.gensalt())
             new_farmer = Farmer(
